@@ -5,6 +5,8 @@ from tkinter import *
 from tkinter import messagebox, simpledialog
 import random
 import json
+from tkinter.ttk import Combobox
+
 import pyperclip as clipboard
 from cryptography.fernet import Fernet
 
@@ -14,6 +16,7 @@ LABEL_COLOR = "#ffffff"
 WEBSITE_LABEL = "Website: "
 EMAIL_USERNAME_LABEL = "Email/Username: "
 PASSWORD_LABEL = "Password: "
+VAULT_LABEL = "Choose the Vault: "
 DEFAULT_EMAIL = "canarionjl@gmail.com"
 
 FONT = ("Arial", 10, "normal")
@@ -22,6 +25,7 @@ MIN_LENGTH = 15
 MAX_LENGTH = 25
 
 master_password = None
+vaults_list = []
 
 
 # ---------------------------- ENCRYPT VAULT ------------------------------- #
@@ -51,8 +55,8 @@ def decrypt_vault(key):
         pass
 
 
-def generate_key(password):
-    word = password.encode('utf-8')
+def generate_key(encryption_password):
+    word = encryption_password.encode('utf-8')
     hashes = hashlib.sha256(word).digest()
     return base64.urlsafe_b64encode(hashes)
 
@@ -187,50 +191,68 @@ window = Tk()
 window.title("Password Manager")
 window.config(padx=50, pady=50, bg=BACKGROUND_COLOR)
 
-canvas = Canvas(width=210, height=210, bg=BACKGROUND_COLOR, highlightthickness=0)
-password_image = PhotoImage(file="logo.png")
-canvas.create_image(105, 105, image=password_image)
-canvas.grid(row=0, column=1)
 
-website_label = Label(text=WEBSITE_LABEL, font=FONT, bg=BACKGROUND_COLOR)
-website_label.grid(row=1, column=0, sticky="w")
+def configure_canvas():
+    canvas = Canvas(width=210, height=210, bg=BACKGROUND_COLOR, highlightthickness=0)
+    password_image = PhotoImage(file="logo.png")
+    canvas.create_image(105, 105, image=password_image)
+    canvas.grid(row=0, column=1)
 
-email_username_label = Label(text=EMAIL_USERNAME_LABEL, font=FONT, bg=BACKGROUND_COLOR)
-email_username_label.grid(row=2, column=0, sticky="w")
 
-password_label = Label(text=PASSWORD_LABEL, font=FONT, bg=BACKGROUND_COLOR)
-password_label.grid(row=3, column=0, sticky="w")
+def configure_labels():
+    vault_label = Label(text=VAULT_LABEL, font=FONT, bg=BACKGROUND_COLOR)
+    vault_label.grid(row=1, column=0, sticky="w")
 
-generate_password_button = Button(text="Generate Password", bg=BACKGROUND_COLOR, command=print_password)
-generate_password_button.grid(row=3, column=2, sticky="e", pady=2)
+    website_label = Label(text=WEBSITE_LABEL, font=FONT, bg=BACKGROUND_COLOR)
+    website_label.grid(row=2, column=0, sticky="w")
 
-add_password_button = Button(text="Add", bg=BACKGROUND_COLOR, width=46, command=save_data)
-add_password_button.grid(row=4, column=1, columnspan=2, pady=3)
+    email_username_label = Label(text=EMAIL_USERNAME_LABEL, font=FONT, bg=BACKGROUND_COLOR)
+    email_username_label.grid(row=3, column=0, sticky="w")
 
-search_button = Button(text="Search", bg=BACKGROUND_COLOR, command=find_password, width=14)
-search_button.grid(row=1, column=2, sticky="e", pady=3)
+    password_label = Label(text=PASSWORD_LABEL, font=FONT, bg=BACKGROUND_COLOR)
+    password_label.grid(row=4, column=0, sticky="w")
 
-website_input = Entry(width=33, bg=LABEL_COLOR)
-website_input.grid(row=1, column=1, sticky="w")
-website_input.focus()  # set the focus on the website input
 
-email_username_input = Entry(width=55, bg=LABEL_COLOR)
-email_username_input.grid(row=2, column=1, columnspan=2, sticky="w")
-email_username_input.insert(0, DEFAULT_EMAIL)
+def configure_lists():
+    vault_list = Combobox(state="readonly", value=vaults_list)
+    vault_list.grid(row=1, column=1)
 
-password_input = Entry(width=33, bg=LABEL_COLOR)
-password_input.grid(row=3, column=1, sticky="w", columnspan=2)
 
-password = simpledialog.askstring(title="Master Password",
-                                  prompt="What's your Master Password?")
-master_password = generate_key(password)
+def configure_buttons():
+    generate_password_button = Button(text="Generate Password", bg=BACKGROUND_COLOR, command=print_password)
+    generate_password_button.grid(row=4, column=2, sticky="e", pady=2)
+
+    add_password_button = Button(text="Add", bg=BACKGROUND_COLOR, width=46, command=save_data)
+    add_password_button.grid(row=5, column=1, columnspan=2, pady=3)
+
+    create_vault_button = Button(text="New Vault", bg=BACKGROUND_COLOR, width="14")
+    create_vault_button.grid(row=1, column=2, pady=3, sticky="e")
+
+    search_button = Button(text="Search", bg=BACKGROUND_COLOR, command=find_password, width=14)
+    search_button.grid(row=2, column=2, sticky="e", pady=3)
+
+def configure_inputs():
+    website_input = Entry(width=33, bg=LABEL_COLOR)
+    website_input.grid(row=2, column=1, sticky="w")
+    website_input.focus()  # set the focus on the website input
+
+    email_username_input = Entry(width=55, bg=LABEL_COLOR)
+    email_username_input.grid(row=3, column=1, columnspan=2, sticky="w")
+    email_username_input.insert(0, DEFAULT_EMAIL)
+
+    password_input = Entry(width=33, bg=LABEL_COLOR)
+    password_input.grid(row=4, column=1, sticky="w", columnspan=2)
+
+
+# password = simpledialog.askstring(title="Master Password",
+#                                   prompt="What's your Master Password?")
+# master_password = generate_key(password)
 
 window.mainloop()
 
-
-#Crear nuevos vaults --> cada vault es un fichero json cuyo nombre es solicitado al usuario
-#Cada vault tendrá una contraseña maestra solicitada al momento de la creación
-#Se mostrará una lista desplegable con todos los vaults disponible para que el usuario elija cual quiere
-#Para comprobar la contraseña se tratará de decodificar el archivo y si da error (teniendo en cuenta que el vault existe pq esta mostrado --> estará vacío o la contraseña es incorrecta
-#Otra forma es guardar las contraseñas de los vaules hasheadas por md5 (ya que sha256 se está utilizando para generar las claves de cifrado) en un fichero json y comprobar si la contraseña maestra hasehada por md5 coincide con la almacenada
-#La ultima opción me gusta más -> Evaluar cual de las dos es más óptima
+# Crear nuevos vaults --> cada vault es un fichero json cuyo nombre es solicitado al usuario
+# Cada vault tendrá una contraseña maestra solicitada al momento de la creación
+# Se mostrará una lista desplegable con todos los vaults disponible para que el usuario elija cual quiere
+# Para comprobar la contraseña se tratará de decodificar el archivo y si da error (teniendo en cuenta que el vault existe pq esta mostrado --> estará vacío o la contraseña es incorrecta
+# Otra forma es guardar las contraseñas de los vaules hasheadas por md5 (ya que sha256 se está utilizando para generar las claves de cifrado) en un fichero json y comprobar si la contraseña maestra hasehada por md5 coincide con la almacenada
+# La ultima opción me gusta más -> Evaluar cual de las dos es más óptima
