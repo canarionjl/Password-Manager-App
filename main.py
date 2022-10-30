@@ -45,10 +45,10 @@ def encrypt_vault(key):
 def decrypt_vault(key):
     try:
         with open("data.json", "rb") as vault:
-            contents = vault.read()
-            contents_decrypted = Fernet(key).decrypt(contents)
+            content = vault.read()
+            content_decrypted = Fernet(key).decrypt(content)
         with open("data.json", "wb") as vault:
-            vault.write(contents_decrypted)
+            vault.write(content_decrypted)
     except FileNotFoundError:
         pass
     except JSONDecodeError:

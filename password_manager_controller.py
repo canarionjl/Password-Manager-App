@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import random
+from json import JSONDecodeError
 from tkinter import END
 from cryptography.fernet import Fernet
 import pyperclip as clipboard
@@ -21,6 +22,7 @@ class password_manager_controller:
     def __init__(self):
         self.model = None
         self.view = None
+        self.key = self.generate_key("password")
 
     def inject_view_model(self, model, view):
         self.model = model
@@ -28,27 +30,21 @@ class password_manager_controller:
 
     # ---------------------------- ENCRYPT VAULT ------------------------------- #
     def encrypt_vault(self, key):
-        content = self.model.get_vault_content(vault_name)
-        if content is None:
-            return False
-        content_encrypted = Fernet(key).encrypt(content)
-        state = self.model.set_vault_content(vault_name, content_encrypted)
-        if not state:
-            return False
-        return True
+        content = self.model.get_binary_vault_content(vault_name=vault_name)
+        if content is not None:
+            content_encrypted = Fernet(key).encrypt(content)
+            return self.model.set_binary_vault_content(content=content_encrypted, vault_name=vault_name)
+        return False
 
     def decrypt_vault(self, key):
-        content = self.model.get_vault_content(vault_name)
-        if content is None:
-            return False
-        content_decrypted = Fernet(key).decrypt(content)
-        state = self.model.set_vault_content(vault_name, content_decrypted)
-        if not state:
-            return False
-        return True
+        content = self.model.get_binary_vault_content(vault_name=vault_name)
+        if content is not None:
+            print(key)
+            content_decrypted = Fernet(key).decrypt(content)
+            return self.model.set_binary_vault_content(vault_name=vault_name, content=content_decrypted)
+        return False
 
-    @staticmethod
-    def generate_key(encryption_password):
+    def generate_key(self, encryption_password):
         word = encryption_password.encode('utf-8')
         hashes = hashlib.sha256(word).digest()
         return base64.urlsafe_b64encode(hashes)
@@ -61,16 +57,19 @@ class password_manager_controller:
             self.view.show_warning_message(title="Empty Website field", message=f"Please, introduce the website")
             return
 
+        decryption_state = self.decrypt_vault(self.key)
         data = self.model.get_vault_content(vault_name=vault_name)
 
-        if data is None:
+        if data is None or not decryption_state:
             self.view.show_error_message(title="Error", message="No data found")
             return
 
+        self.encrypt_vault(self.key)
+
         if website in data.keys():
-            password = data[website]["password"]
+            password_inside = data[website]["password"]
             email = data[website]["email"]
-            clipboard.copy(password)
+            clipboard.copy(password_inside)
             self.view.show_info_message(
                 title="Password copied",
                 message=f"The password for website '{website}' and email '{email}' has been copied to clipboard"
@@ -131,14 +130,17 @@ class password_manager_controller:
 
         is_ok = self.view.ask_ok_cancel(title=website, message=f"Are you sure you wanna save the data for {email}?")
         if is_ok:
+            decryption_state = self.decrypt_vault(self.key)
             data = self.model.get_vault_content(vault_name=vault_name)
-            if data is None:
+            if data is None or decryption_state:
                 data = new_dict
             else:
                 data.update(new_dict)
 
             state = self.model.set_vault_content(vault_name=vault_name, content=data)
-            if not state:
+            encryption_state = self.encrypt_vault(self.key)
+
+            if not state or not encryption_state:
                 self.view.show_error_message(title="Unknown Error", message="Unknown error while updating the password")
             else:
                 self.view.show_info_message(
@@ -151,8 +153,8 @@ class password_manager_controller:
 
     def print_generated_password(self):
         self.view.password_input.delete(0, END)
-        password = self.generate_password()
-        self.view.password_input.insert(0, password)
+        generated_password = self.generate_password()
+        self.view.password_input.insert(0, generated_password)
 
     def get_vault_list(self):
         pass

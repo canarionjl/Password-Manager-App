@@ -32,3 +32,25 @@ class password_manager_model:
             return False
         else:
             return True
+
+    def get_binary_vault_content(self, vault_name):
+        try:
+            with open(f"{BASED_ROUTE}{vault_name}.json", "rb") as vault:
+                data = vault.read()
+        except FileNotFoundError:
+            return None
+        except JSONDecodeError:
+            return None
+        else:
+            return data
+
+    def set_binary_vault_content(self, vault_name, content):
+        try:
+            with open(f"{BASED_ROUTE}{vault_name}.json", "wb") as vault:
+                vault.write(content)
+        except FileNotFoundError:
+            return False
+        except JSONDecodeError:
+            return False
+        else:
+            return True
