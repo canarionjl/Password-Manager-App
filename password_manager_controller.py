@@ -1,6 +1,8 @@
 import base64
+import getpass
 import hashlib
 import random
+import time
 from json import JSONDecodeError
 from tkinter import END
 from cryptography.fernet import Fernet
@@ -158,3 +160,17 @@ class password_manager_controller:
 
     def get_vault_list(self):
         pass
+
+    def configure(self):
+        device_username = getpass.getuser()
+        completed_route = self.model.create_storage_folder(device_username)
+        self.model.add_new_vault("JoseLuis", "password") # test code
+        if completed_route is None:
+            self.view.show_error_message(
+                title="Fatal Error",
+                message="Error while getting/writing the data. The program won't work properly"
+            )
+            exit(1)
+
+
+

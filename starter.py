@@ -14,4 +14,6 @@ def inject_dependencies():
 
 
 inject_dependencies()
+controller.configure()
 view.init_view()
+
