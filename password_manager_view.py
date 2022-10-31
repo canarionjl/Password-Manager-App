@@ -12,7 +12,7 @@ DEFAULT_EMAIL = "canarionjl@gmail.com"
 
 FONT = ("Arial", 10, "normal")
 
-
+vault_list = []
 class password_manager_view:
 
     def __init__(self):
@@ -73,7 +73,7 @@ class password_manager_view:
         self.password_input = Entry(width=33, bg=LABEL_COLOR)
         self.password_input.grid(row=4, column=1, sticky="w", columnspan=2)
 
-        self.vault_list = Combobox(state="readonly", value=self.controller.get_vault_list, width=30)
+        self.vault_list = Combobox(state="readonly", value=self.controller.get_vault_list(), width=30)
         self.vault_list.grid(row=1, column=1, sticky="w")
 
         #  ---- Buttons ----
@@ -88,7 +88,12 @@ class password_manager_view:
         self.add_password_button = Button(text="Add", bg=BACKGROUND_COLOR, width=46, command=self.controller.save_data)
         self.add_password_button.grid(row=5, column=1, columnspan=2, pady=3)
 
-        self.create_vault_button = Button(text="New Vault", bg=BACKGROUND_COLOR, width="14")
+        self.create_vault_button = Button(
+                                          text="New Vault",
+                                          bg=BACKGROUND_COLOR,
+                                          width="14",
+                                          command=self.get_data_to_create_vault
+                                          )
         self.create_vault_button.grid(row=1, column=2, pady=3, sticky="e")
 
         self.search_button = Button(text="Search", bg=BACKGROUND_COLOR, command=self.controller.find_password, width=14)
@@ -128,3 +133,7 @@ class password_manager_view:
 
     def ask_ok_cancel(self, title, message):
         return messagebox.askokcancel(title=title, message=message)
+
+    def get_data_to_create_vault(self):
+        pass
+       

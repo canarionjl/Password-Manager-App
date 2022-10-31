@@ -1,5 +1,4 @@
 import base64
-import getpass
 import hashlib
 import random
 import time
@@ -41,7 +40,6 @@ class password_manager_controller:
     def decrypt_vault(self, key):
         content = self.model.get_binary_vault_content(vault_name=vault_name)
         if content is not None:
-            print(key)
             content_decrypted = Fernet(key).decrypt(content)
             return self.model.set_binary_vault_content(vault_name=vault_name, content=content_decrypted)
         return False
@@ -162,9 +160,8 @@ class password_manager_controller:
         pass
 
     def configure(self):
-        device_username = getpass.getuser()
-        completed_route = self.model.create_storage_folder(device_username)
-        self.model.add_new_vault("JoseLuis", "password") # test code
+        completed_route = self.model.create_storage_folder()
+        self.model.add_new_vault("JoseLuis", "password")  # test code
         if completed_route is None:
             self.view.show_error_message(
                 title="Fatal Error",
@@ -172,5 +169,7 @@ class password_manager_controller:
             )
             exit(1)
 
-
+    def get_vault_list(self):
+        vault_list = self.model.get_vault_list()
+        return vault_list
 

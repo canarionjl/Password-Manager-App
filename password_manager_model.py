@@ -57,11 +57,12 @@ class password_manager_model:
         else:
             return True
 
-    def create_storage_folder(self, username):
+    def create_storage_folder(self):
+
         global based_route, completed_route
-        based_route = f"C:/Users/{username}" # trying to write on AppData/Local
+        based_route = os.getenv('APPDATA')  # trying to write on AppData/Roaming
         completed_route = based_route + "/PasswordManagerApp"
-        print(completed_route)
+        print(os.path.exists(f"{completed_route}/vaults.json"))
         if os.path.exists(based_route) and not os.path.exists(completed_route):
             try:
                 os.mkdir(completed_route)
@@ -71,15 +72,22 @@ class password_manager_model:
 
     def add_new_vault(self, vault_name, master_password):
         try:
-            with open(f"{completed_route}/{vault_name}.json", "r") as vault:
+            with open(f"{completed_route}/vaults.json", "r") as vault:
                 content = json.load(vault)
         except FileNotFoundError:
             content = {vault_name: master_password}
         else:
             content.update({vault_name: master_password})
         finally:
-            with open(f"{completed_route}/{vault_name}.json", "w") as vault:
+            with open(f"{completed_route}/vaults.json", "w") as vault:
                 json.dump(content, vault, indent=4)
 
-
-
+    def get_vault_list(self):
+        try:
+            with open(f"{completed_route}/vaults.json", "r") as vault:
+                content = json.load(vault)
+        except FileNotFoundError:
+            return None
+        else:
+            vault_list = [key for key in content.keys()]
+            return vault_list
